@@ -2,7 +2,20 @@
 
 namespace Modules\Core\Http\Middleware;
 
-class CheckUserStatus extends \Shetabit\Shopit\Modules\Core\Http\Middleware\CheckUserStatus
-{
+use Closure;
+use Illuminate\Support\Facades\Auth;
+use Modules\Customer\Entities\Customer;
+use Modules\Core\Helpers\Helpers;
 
+class CheckUserStatus
+{
+    public function handle($request, Closure $next)
+    {
+        $user = Auth::user();
+        if (($user instanceof Customer) && !$user->isActive()) {
+            throw Helpers::makeValidationException('حساب شما غیر فعال است. لطفا با پشتیبانی تماس حاصل فرمایید.');
+        }
+
+        return $next($request);
+    }
 }

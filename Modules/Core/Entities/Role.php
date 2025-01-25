@@ -7,7 +7,7 @@ use Spatie\Permission\Guard;
 use Modules\Core\Contracts\Role as RoleContract;
 use Spatie\Permission\Models\Role as RolePermission;
 
-class Role extends RolePermission implements RoleContract
+class Role extends RolePermission /*implements RoleContract*/
 {
   protected function serializeDate(DateTimeInterface $date): string
   {

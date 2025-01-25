@@ -2,9 +2,20 @@
 
 namespace Modules\Core\Entities;
 
-use Shetabit\Shopit\Modules\Core\Entities\User as BaseUser;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\App;
+use Laravel\Passport\ClientRepository;
+use Modules\Bonusme\Entities\Business;
 
-abstract class User extends BaseUser
+abstract class User extends Authenticatable
 {
+    public function createTokenHelper($name)
+    {
+        App::clearResolvedInstance(ClientRepository::class);
+        app()->singleton(ClientRepository::class, function () {
+            return new ClientRepository(static::CLIENT_ID, null);
+        });
 
+        return $this->createToken($name);
+    }
 }

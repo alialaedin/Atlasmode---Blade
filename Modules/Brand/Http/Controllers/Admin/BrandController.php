@@ -19,7 +19,6 @@ class BrandController extends Controller
         'updater' => fn ($q) => $q->select(['id', 'name'])
       ])
       ->latest('id')
-      ->filters()
       ->get();
 
     return view('brand::admin.index', compact('brands'));

@@ -3,6 +3,7 @@
 namespace Modules\Brand\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Core\Entities\BaseModel;
 use Modules\Core\Helpers\Helpers;
 use Modules\Core\Traits\HasAuthors;
@@ -11,7 +12,7 @@ use Modules\Product\Entities\Product;
 use Spatie\MediaLibrary\HasMedia;
 use Modules\Core\Traits\InteractsWithMedia;
 
-class Brand extends BaseModel implements HasMedia
+class Brand extends Model implements HasMedia
 {
   use HasFactory, InteractsWithMedia, HasAuthors;
 

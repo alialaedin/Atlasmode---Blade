@@ -2,9 +2,12 @@
 
 namespace Modules\Core\Http\Controllers;
 
-use Shetabit\Shopit\Modules\Core\Http\Controllers\BaseController as BaseBaseController;
+use App\Http\Controllers\Controller;
 
-abstract class BaseController extends BaseBaseController
+abstract class BaseController extends Controller
 {
-
+    public function run($job, $params)
+    {
+        return app()->make($job, $params)->handle();
+    }
 }

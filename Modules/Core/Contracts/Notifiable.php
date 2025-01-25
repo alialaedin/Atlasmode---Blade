@@ -2,9 +2,8 @@
 
 namespace Modules\Core\Contracts;
 
-use Shetabit\Shopit\Modules\Core\Contracts\Notifiable as BaseNotifiable;
+interface Notifiable {
+    public function notifications();
 
-interface Notifiable extends BaseNotifiable
-{
-
+    public function notify($instance);
 }

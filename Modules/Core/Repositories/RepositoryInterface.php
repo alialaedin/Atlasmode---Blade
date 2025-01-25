@@ -2,9 +2,21 @@
 
 namespace Modules\Core\Repositories;
 
-use Shetabit\Shopit\Modules\Core\Repositories\RepositoryInterface as BaseRepositoryInterface;
-
-interface RepositoryInterface extends BaseRepositoryInterface
+interface RepositoryInterface
 {
+
+    public function __construct($model);
+
+    public function get();
+
+    public function paginate();
+
+    public function show($id);
+
+    public function create(array $data);
+
+    public function update(array $data, $id);
+
+    public function delete($id);
 
 }

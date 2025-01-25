@@ -3,11 +3,10 @@
 namespace Modules\Core\Entities;
 
 use Illuminate\Http\UploadedFile;
-use Modules\Core\Helpers\File;
 use Modules\Core\Helpers\Helpers;
-use Shetabit\Shopit\Modules\Core\Entities\Media as BaseMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media as SpatieMedia ;
 
-class Media extends BaseMedia
+class Media extends SpatieMedia
 {
     public static function addMedia($images, $model, $collectionName)
     {
@@ -112,6 +111,39 @@ class Media extends BaseMedia
         }
         $model->load('media');
         return $updatedImages;
+    }
+
+    public function getSrcSetArray($conversionName = '')
+    {
+        $registeredResponsiveImages = $this->responsiveImages($conversionName);
+        $srcSetArray = [];
+        foreach($registeredResponsiveImages->files as $responsiveImage) {
+            $srcSetArray[] = [
+                'width' => $responsiveImage->width(),
+                'url' => $responsiveImage->url()
+            ];
+        }
+
+        return $srcSetArray;
+    }
+
+    public function getSvgPlaceholder()
+    {
+        $registeredResponsiveImages = $this->responsiveImages($conversionName = '');
+
+        return $registeredResponsiveImages->getPlaceholderSvg();
+    }
+
+    public function delete()
+    {
+        if (SpatieMedia::where('uuid', $this->uuid)->count() > 1) {
+            // To preserve files because other models are using it
+            Media::withoutEvents(function () {
+                parent::delete();
+            });
+        } else {
+            parent::delete();
+        }
     }
 
    

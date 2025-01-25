@@ -24,19 +24,19 @@
             <i class="angle fa fa-angle-left"></i>
           </a>
           <ul class="slide-menu">
-            @can('read_area')
+            {{-- @can('read_area')
               <li><a href="{{ route('admin.provinces.index') }}" class="slide-item">استان</a></li>
               <li><a href="{{ route('admin.cities.index') }}" class="slide-item">شهر</a></li>
-            @endcan
-            @can('read_color')
+            @endcan --}}
+            {{-- @can(abilities: 'read_color')
               <li><a href="{{ route('admin.colors.index') }}" class="slide-item">رنگ ها</a></li>
-            @endcan
+            @endcan --}}
             @can('read_unit')
               <li><a href="{{ route('admin.units.index') }}" class="slide-item"><span>واحد</span></a></li>
             @endcan
-            @can('read_size_chart')
+            {{-- @can('read_size_chart')
             <li><a href="#" class="slide-item"><span>سایز چارت</span></a></li>
-            @endcan
+            @endcan --}}
             @can('read_brand')
             <li><a href="{{ route('admin.brands.index') }}" class="slide-item"><span>برند ها</span></a></li>
             @endcan
@@ -63,23 +63,23 @@
             @can('read_specification')
               <li><a href="{{ route('admin.specifications.index') }}" class="slide-item">مشخصات</a></li>
             @endcan
-            @can('read_coupon')
+            {{-- @can('read_coupon')
               <li><a href="{{ route('admin.coupons.index') }}" class="slide-item">کد تخفیف</a></li>
-            @endcan
-            @can('read_specificDiscount')
+            @endcan --}}
+            {{-- @can('read_specificDiscount')
               <li><a href="{{ route('admin.specific-discounts.index') }}" class="slide-item">تخفیفات ویژه</a></li>
-            @endcan
-            @can('recommendation')
+            @endcan --}}
+            {{-- @can('recommendation')
               <li><a href="{{ route('admin.recommendations.groups') }}" class="slide-item">محصولات پیشنهادی</a></li>
-            @endcan
-            @can('read_gift_package')
+            @endcan --}}
+            {{-- @can('read_gift_package')
               <li><a href="{{ route('admin.gift-packages.index') }}" class="slide-item">بسته بندی هدیه</a></li>
-            @endcan
+            @endcan --}}
           </ul>
         </li>
       @endcanany
 
-      @canany(['read_post', 'read_post', 'read_slider', 'read_menu', 'read_position', 'read_page', 'read_faq'])
+      {{-- @canany(['read_post', 'read_post', 'read_slider', 'read_menu', 'read_position', 'read_page', 'read_faq'])
         <li class="slide">
           <a class="side-menu__item" style="cursor: pointer" data-toggle="slide">
             <i class="fe fe-layers sidemenu_icon"></i>
@@ -244,7 +244,7 @@
             @endforeach
           </ul>
         </li> 
-      @endcan
+      @endcan --}}
 
       {{-- <li class="slide">
         <a class="side-menu__item" style="cursor: pointer" data-toggle="slide">

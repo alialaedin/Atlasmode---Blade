@@ -2,9 +2,29 @@
 
 namespace Modules\Core\Classes;
 
-use Shetabit\Shopit\Modules\Core\Classes\SafeArray as BaseSafeArray;
+use ArrayAccess;
 
-class SafeArray extends BaseSafeArray
+class SafeArray implements ArrayAccess
 {
+    public function __construct(public array $array){}
 
+    public function offsetExists($offset)
+    {
+        return isset($this->array[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->array[$offset] ?? null;
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        $this->array[$offset] = $value;
+    }
+
+    public function offsetUnset($offset)
+    {
+        unset($this->array[$offset]);
+    }
 }
