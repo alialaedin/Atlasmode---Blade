@@ -36,6 +36,11 @@ return [
         Product::STATUS_OUT_OF_STOCK => 'danger',
         Product::STATUS_AVAILABLE_OFFLINE => 'success',
         Product::STATUS_INIT_QUANTITY => 'pink',
+    ],
+
+    'productDiscountTypes' => [
+        Product::DISCOUNT_TYPE_FLAT => 'مقدار ثابت',
+        Product::DISCOUNT_TYPE_PERCENTAGE => 'درصد',
     ]
 
 ];

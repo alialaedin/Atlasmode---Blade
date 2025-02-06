@@ -1,872 +1,1259 @@
 @extends('admin.layouts.master')
 
-@section('styles')
-<style>  
-    .image-size {  
-        width: 100%;         
-        min-height: 100px;       
-        max-height: 100px;       
-        object-fit: cover;   
-    }  
-
-	label {
-		margin-bottom: 0;
-	}
-
-	.glyphicon-move:before {
-		content: none;
-	}
-
-</style>  
-@endsection
-
 @section('content')
-    <div class="page-header">
-        <x-breadcrumb :items="[['title' => 'ثبت محصول']]" />
-    </div>
 
-	<x-alert-danger/>
+<div class="page-header">
+  <x-breadcrumb :items="[
+		['title' => 'لیست محصولات', 'route_link' => 'admin.products.index'],
+		['title' => 'ثبت محصول']
+	]"/>
+</div>
 
-    <form id="MainForm" action="{{ route('admin.products.store') }}" method="POST">
-		@csrf
-		<div class="row">
-			<div class="col-xl-8">
-				<div class="row">
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">اطلاعات محصول</x-slot>
-							<x-slot name="cardOptions"><x-card-options /></x-slot>
-							<x-slot name="cardBody">
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-title">نام محصول :<span class="text-danger">&starf;</span></label></div>
-									<div class="col-xl-10"><input type="text" placeholder="نام محصول" class="form-control" name="product[title]" id="product-title"></div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-quantity">موجودی :</label></div>
-									<div class="col-xl-10"><input type="number" placeholder="موجودی" class="form-control" name="product[quantity]" id="product-quantity"></div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-barcode">بارکد :</label></div>
-									<div class="col-xl-10"><input type="text" placeholder="بارکد" class="form-control" name="product[barcode]" id="product-barcode"></div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-SKU">SKU :</label></div>
-									<div class="col-xl-10"><input type="text" placeholder="SKU" class="form-control" name="product[SKU]" id="product-SKU"></div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-weight">وزن :</label></div>
-									<div class="col-xl-10"><input type="number" placeholder="وزن" class="form-control" id="product-weight"></div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-max-number-purchases">حداکثر تعداد خرید :</label></div>
-									<div class="col-xl-10"><input type="number" placeholder="حداکثر تعداد خرید" class="form-control" id="product-max-number-purchases"></div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-brand-id">برند :</label></div>
-									<div class="col-xl-10">
-										<select name="product[brand_id]" id="product-brand-id" class="form-control">
-											<option value="">انتخاب</option>
-											@foreach ($brands as $brand)
-												<option value="{{ $brand->id }}" {{ old('product.brand_id', '') == $brand->id ? 'selected' : '' }}>
-													{{ $brand->name }}
-												</option>
-											@endforeach
-										</select>
-									</div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-unit-id">واحد :<span class="text-danger">&starf;</span></label></div>
-									<div class="col-xl-10">
-										<select name="product[unit_id]" id="product-unit-id" class="form-control" required>
-											<option value="">انتخاب</option>
-											@foreach ($units as $unit)
-												<option value="{{ $unit->id }}" {{ old('product.unit_id', '') == $unit->id ? 'selected' : '' }}>
-													{{ $unit->name }}
-												</option>
-											@endforeach
-										</select>
-									</div>
-								</div>
-								{{-- <div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="product-tags">تگ ها :</label></div>
-									<div class="col-xl-10">
-										<select name="product[tags][]" id="product-tags" class="form-control" multiple>
-											<option value="">انتخاب</option>
-											@foreach ($tags as $tag)
-												<option value="{{ $tag->id }}">{{ $tag->name }}</option>
-											@endforeach
-										</select>
-									</div>
-								</div> --}}
-							</x-slot>
-						</x-card>
-					</div>
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">توضیحات</x-slot>
-							<x-slot name="cardOptions"><x-card-options /></x-slot>
-							<x-slot name="cardBody">@include('components.editor',['name' => 'product[description]','required' => 'true','field_name' => 'text'])</x-slot>
-						</x-card>
-					</div>
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">عکس ها</x-slot>
-							<x-slot name="cardOptions"><x-card-options /></x-slot>
-							<x-slot name="cardBody">
-								<div class="row">
-									<button type="button" id="add-image-btn" class="btn btn-outline-primary" onclick="$('#product-images-input').click()">افزودن عکس</button>
-									<input type="file" id="product-images-input" name="product[images][]" hidden multiple accept="image/*" onchange="showProductImages(event, $('#show-product-images-section'))">
-								</div>
-								<div id="show-product-images-section" class="row mt-3"></div>
-							</x-slot>
-						</x-card>
-					</div>
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">تنوع ها</x-slot>
-							<x-slot name="cardOptions"><x-card-options /></x-slot>
-							<x-slot name="cardBody">
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="categories-select">دسته بندی ها :<span class="text-danger">&starf;</span></label></div>
-									<div class="col-xl-10">
-										<select id="categories-select" class="form-control" name="product[categories][]" multiple>
-											@foreach ($categories as $category)
-												<option value="{{ $category->id }}"
-													{{ in_array($category->id, old('categories') ?? [0]) ? 'selected' : '' }}>
-													{{ $category->title }}
-												</option>
-											@endforeach
-										</select>
-									</div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-2"><label for="attributes-select">ویژگی ها :<span class="text-danger">&starf;</span></label></div>
-									<div class="col-xl-10">
-										<select id="attributes-select" class="form-control" multiple>
-										</select>
-									</div>
-								</div>
+<div id="app">
+  <form id="MainForm" action="{{ route('admin.products.store') }}" method="POST">
+    @csrf
+    <div class="row">
+      <div class="col-xl-8">
 
-								<div class="row align-items-center my-2" id="attributesContainer"></div>
-								<div class="row" style="margin-top: 25px">
-									<x-table-component id="varieties-table">
-										<x-slot name="tableTh">
-											<tr>
-												<th>عنوان</th>
-												<th>قیمت (تومان)</th>
-												<th>وزن (گرم)</th>
-												<th>حداکثر تعداد خرید</th>
-												<th>موجودی</th>
-												{{-- <th>تنوع مرجع</th> --}}
-												<th>عملیات</th>
-											</tr>
-										</x-slot>
-										<x-slot name="tableTd">
-											<tr class="d-none glyphicon-move" id="example-tr" style="cursor: move;">
-												<td class="title"></td>
-												<td class="price"></td>
-												<td class="weight"></td>
-												<td class="max-number-purchases"></td>
-												<td class="quantity"></td>
-												{{-- <td class="main-variety"></td> --}}
-												<td class="operation"></td>
-											</tr>
-										</x-slot>
-									</x-table-component>
-								</div>
-							</x-slot>
-						</x-card>
-					</div>
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">مشخصات محصول</x-slot>
-							<x-slot name="cardOptions"><x-card-options /></x-slot>
-							<x-slot name="cardBody">
-								<div class="row">
-									<x-table-component id="specifications-table">
-										<x-slot name="tableTh">
-											<tr>
-												<th>نام</th>
-												<th>مقدار</th>
-											</tr>
-										</x-slot>
-										<x-slot name="tableTd">
-											@foreach ($specifications as $specification)  
-												<tr>  
-													<td>  
-														<span>{{ $specification->name }}</span>  
-														<input hidden value="{{ $specification->id }}" name="product[specifications][{{ $loop->iteration }}][id]">  
-													</td>  
-													<td >  
-														@if ($specification->type === 'text')  
-															<input type="text" class="form-control" name="product[specifications][{{ $loop->iteration }}][value]">  
-														@else  
-															@php  
-																$multiple = $specification->type === 'multi_select' ? 'multiple' : '';  
-															@endphp  
-															<select id="spec-select-{{ $specification->id }}" name="product[specifications][{{ $loop->iteration }}][value]" class="form-control " {{ $multiple }}> 
-																<option value=""></option> 
-																@foreach ($specification->values as $specValue)  
-																	<option value="{{ $specValue->id }}">{{ $specValue->value }}</option>  
-																@endforeach  
-															</select>  
-														@endif  
-													</td>  
-												</tr>  
-											@endforeach
-										</x-slot>
-									</x-table-component>
-								</div>
-							</x-slot>
-						</x-card>
-					</div>
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">اطلاعات سئو</x-slot>
-							<x-slot name="cardOptions"><x-card-options /></x-slot>
-							<x-slot name="cardBody">
-								<div class="row">
-									<div class="col-12">
-										<div class="form-group">
-											<label for="product-meta-title">عنوان متا :</label>
-											<input type="text" id="product-meta-title" name="product[meta_title]" class="form-control" placeholder="عنوان متا">
+				{{-- product details --}}
+				<x-card>
+					<x-slot name="cardTitle">اطلاعات محصول</x-slot>
+					<x-slot name="cardBody">
+
+						{{-- title --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="product-title">نام محصول :<span class="text-danger">&starf;</span></label>
+							</div>
+							<div class="col-xl-10">
+								<input type="text" placeholder="نام محصول" class="form-control" v-model="product.title" id="product-title" required/>
+							</div>
+						</div>
+
+						{{-- quantity --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="product-quantity">موجودی :</label>
+							</div>
+							<div class="col-xl-10">
+								<input type="number" placeholder="موجودی" class="form-control" v-model="product.quantity" id="product-quantity"/>
+							</div>
+						</div>
+
+						{{-- barcode --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="product-barcode">بارکد :</label>
+							</div>
+							<div class="col-xl-10">
+								<input type="text" placeholder="بارکد" class="form-control" v-model="product.barcode" id="product-barcode"/>
+							</div>
+						</div>
+
+						{{-- SKU --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="product-SKU">SKU :</label>
+							</div>
+							<div class="col-xl-10">
+								<input type="text" placeholder="SKU" class="form-control" v-model="product.SKU" id="product-SKU"/>
+							</div>
+						</div>
+
+						{{-- categories --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="categories-select">
+									دسته بندی ها
+									<span class="text-danger">&starf;</span>
+								</label>
+							</div>
+							<div class="col-xl-10">
+								<multiselect
+									dir="rtl"
+									id="categories-select"
+									class="custom-multiselect"
+									v-model="product.categories"
+									label="title"
+									multiple
+									placeholder="انتخاب دسته بندی ها"
+									select-label="برای انتخاب دسته بندی کلیک کنید"
+									deselect-label="برای حذف دسته بندی کلیک کنید"
+									selected-label="انتخاب شده"
+									track-by="id"
+									:options="categories"
+									:close-on-select="false"
+									:searchable="true"
+									required
+								></multiselect>
+							</div>
+						</div>
+
+						{{-- brand --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="brand-select">برند</label>
+							</div>
+							<div class="col-xl-10">
+								<multiselect 
+									dir="rtl" 
+									id="brand-select" 
+									v-model="product.brand"
+									class="custom-multiselect"
+									label="name"
+									placeholder="انتخاب برند" 
+									:options="brands">
+								</multiselect>		
+							</div>
+						</div>
+
+						{{-- unint --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="unit-select">واحد :<span class="text-danger">&starf;</span></label>
+							</div>
+							<div class="col-xl-10">
+								<multiselect 
+									dir="rtl" 
+									id="unit-select" 
+									class="custom-multiselect"
+									v-model="product.unit"
+									placeholder="انتخاب واحد" 
+									label="name"
+									required
+									:options="units">
+								</multiselect>		
+							</div>
+						</div>
+
+						{{-- tags --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="tag-select">تگ ها</label>					
+							</div>
+							<div class="col-xl-10">
+								<multiselect 
+									dir="rtl" 
+									id="tags-select" 
+									class="custom-multiselect"
+									v-model="product.tags"
+									placeholder="انتخاب تگ ها" 
+									label="name"
+									:multiple="true"
+									track-by="id"
+									:close-on-select="false"
+									:options="tags">
+								</multiselect>	
+							</div>
+						</div>
+
+						{{-- image_alt --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-2">
+								<label for="product-image_alt">alt محصول :<span class="text-danger">&starf;</span></label>
+							</div>
+							<div class="col-xl-10">
+								<input type="text" placeholder="alt محصول" class="form-control" v-model="product.image_alt" id="product-image_alt"/>
+							</div>
+						</div>
+
+					</x-slot>
+				</x-card>
+
+				{{-- varieties --}}
+				<x-card>
+					<x-slot name="cardTitle">تنوع‌ها</x-slot>
+					<x-slot name="cardOptions">
+						<div class="card-options">
+							<button 
+								type="button" 
+								data-toggle="modal"
+								data-target="#set-price-for-varieties"
+								:disabled="isVarietiesEmpty"
+								class="btn btn-sm btn-outline-info">
+								قیمت گذاری کلی
+							</button>
+						</div>
+					</x-slot>
+					<x-slot name="cardBody">
+
+						{{-- attributes select-box --}}
+						<div class="row align-items-center mb-5">
+							<div class="col-xl-2">
+								<label for="categories-select">ویژگی‌ها <span class="text-danger">&starf;</span></label>
+							</div>
+							<div class="col-xl-10">
+								<multiselect
+									dir="rtl"
+									label="label"
+									track-by="id"
+									:options="uniqueAttributes"
+									v-model="product.attributes"
+									class="custom-multiselect"
+									id="attributes"
+									placeholder="انتخاب ویژگی ها"
+									:multiple="true"
+									:close-on-select="false"
+									required
+								></multiselect>
+							</div>
+						</div>
+
+						{{-- attribute values select-box --}}
+						<div class="row align-items-center my-2" v-for="attribute in product.attributes">
+							<div class="col-xl-2">
+								<label>
+									ویژگی 
+									<b v-text="attribute.label"></b>
+									<span class="text-danger">&starf;</span>
+								</label>
+							</div>
+							<div class="col-xl-10">
+								<multiselect
+									dir="rtl"
+									label="value"
+									track-by="id"
+									class="custom-multiselect"
+									:taggable="attribute.type === 'text'"
+									v-model="product.attribute_values[attribute.id]"
+									@tag="(value) => addNewTag(value, attribute)"
+									@remove="clearVarietyValues()"
+									@select="clearVarietyValues()"
+									placeholder="انتخاب مقادیر ویژگی"
+									:multiple="true"
+									:close-on-select="attribute.type === 'text'"
+									:required="true"
+									:options="attributes.find(attr => attr.id === attribute.id).values"
+								></multiselect>
+							</div>
+						</div>
+
+						{{-- varieties --}}
+						<div v-show="!isVarietiesEmpty" class="table-responsive mt-5">
+							<table class="table table-bordered text-nowrap text-center">
+								<thead class="border-top">
+									<tr>
+										<th>عنوان</th>
+										<th>قیمت</th>
+										<th>بارکد - SKU</th>
+										<th>موجودی</th>
+										<th>عملیات</th>
+									</tr>
+								</thead>
+								<tbody>
+									<template v-for="(attributes, index) in attributesCombinations">
+
+										<tr>
+											<td>
+												<span v-for="(attr, index) in attributes.items" :key="index">
+													@{{ attr.value }}
+													<span v-if="index !== attributes.items.length - 1">	- </span>
+												</span>
+											</td>
+											<td>  
+                        <input 
+													type="number" 
+													class="form-control text-center"   
+                          :name="`product[varieties][${index}][price]`"
+                          placeholder="قیمت"
+													v-model="getVarietyValue(attributes.id).price"
+												/>  
+											</td>  
+											<td>  
+												<input 
+													type="text" 
+													class="mb-2 form-control text-center"   
+                          :name="`product[varieties][${index}][barcode]`"
+													v-model="getVarietyValue(attributes.id).barcode"
+													placeholder="بارکد"
+												/>  
+												<input 
+													type="text" 
+													class="mt-2 form-control text-center"   
+                          :name="`product[varieties][${index}][SKU]`"
+													v-model="getVarietyValue(attributes.id).SKU"
+													placeholder="SKU"
+												/>  
+											</td>  
+											<td>  
+												<input 
+													type="number" 
+													class="form-control text-center"   
+                          :name="`product[varieties][${index}][quantity]`"
+													v-model="getVarietyValue(attributes.id).quantity"
+													placeholder="موجودی"
+												/>  
+											</td> 
+											<td>
+												<button 
+													:data-target="'#variety-images' + attributes.id"
+                          data-toggle="modal"
+													class="btn btn-sm btn-icon btn-success ml-1" 
+													type="button">
+													<i class="fa fa-image"></i>
+												</button>
+												<button 
+													:data-target="'#variety-extra-details' + attributes.id"
+                          data-toggle="modal"
+													class="btn btn-sm btn-icon btn-warning" 
+													type="button">
+													<i class="fa fa-pencil"></i>
+												</button>
+											</td>
+										</tr>
+
+										<div class="modal fade" :id="'variety-extra-details' + attributes.id" style="display: none" aria-hidden="true">
+                      <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content modal-content-demo">
+                          <div class="modal-header">
+                            <p class="modal-title font-weight-bold">اطلاعات تنوع</p>
+                            <button aria-label="Close" class="close" data-dismiss="modal">
+                              <span aria-hidden="true">×</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+
+														<div class="row align-items-center my-3">
+															<div class="col-xl-2">
+																<label class="d-flex" :for="'variety-price' + attributes.id">قیمت : <span class="text-danger">&starf;</span></label>
+															</div>
+															<div class="col-xl-10">
+																<input 
+																	:id="'variety-price' + attributes.id" 
+																	type="text"
+																	class="form-control" 
+																	v-model="product.variety_values[attributes.id].price" 
+																	required
+																/>
+															</div>
+														</div>
+
+														<div class="row align-items-center my-3">
+															<div class="col-xl-2">
+																<label class="d-flex" :for="'variety-purchase-price' + attributes.id">قیمت خرید :</label>
+															</div>
+															<div class="col-xl-10">
+																<input 
+																	:id="'variety-purchase-price' + attributes.id" 
+																	type="text" 
+																	class="form-control" 
+																	v-model="product.variety_values[attributes.id].purchase_price"
+																/>															
+															</div>
+														</div>
+
+														<div class="row align-items-center my-3">
+															<div class="col-xl-2">
+																<label class="d-flex" :for="'variety-discount-type' + attributes.id">نوع تخفیف :</label>
+															</div>
+															<div class="col-xl-10">
+																<multiselect
+																	dir="rtl"
+																	:id="'variety-discount-type' + attributes.id" 
+																	:name="`product[varieties][${index}][discount_type]`"
+																	class="custom-multiselect"
+																	v-model="product.variety_values[attributes.id].discount_type"
+																	label="label"
+																	placeholder="انتخاب نوع تخفیف"
+																	:options="discountTypes"
+																></multiselect>														
+															</div>
+														</div>
+
+														<div class="row align-items-center my-3">
+															<div class="col-xl-2">
+																<label class="d-flex" :for="'variety-discount' + attributes.id">تخفیف :</label>
+															</div>
+															<div class="col-xl-10">
+																<input 
+																	:id="'variety-discount' + attributes.id" 
+																	type="number" 
+																	class="form-control" 
+																	:name="`product[varieties][${index}][discount]`"
+																	v-model="product.variety_values[attributes.id].discount"
+																/>													
+															</div>
+														</div>
+
+														<div class="row align-items-center my-3">
+															<div class="col-xl-2">
+																<label class="d-flex" :for="'variety-barcode' + attributes.id">بارکد :</label>
+															</div>
+															<div class="col-xl-10">
+																<input 
+																	:id="'variety-barcode' + attributes.id" 
+																	type="text" 
+																	class="form-control" 
+																	v-model="product.variety_values[attributes.id].barcode"
+																/>
+															</div>
+														</div>
+
+														<div class="row align-items-center my-3">
+															<div class="col-xl-2">
+																<label class="d-flex" :for="'variety-SKU' + attributes.id">SKU :</label>
+															</div>
+															<div class="col-xl-10">
+																<input 
+																	:id="'variety-SKU' + attributes.id" 
+																	type="text" 
+																	class="form-control" 
+																	v-model="product.variety_values[attributes.id].SKU"
+																/>
+															</div>
+														</div>
+
+														<div class="row mt-3">
+															<div class="col-12">
+																<button class="btn-block btn btn-sm btn-danger" data-dismiss="modal">بستن</button>
+															</div>
+														</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="modal fade" :id="'variety-images' + attributes.id" style="display: none" aria-hidden="true">
+                      <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content modal-content-demo">
+                          <div class="modal-header">
+                            <p class="modal-title font-weight-bold">تصاویر</p>
+                            <button aria-label="Close" class="close" data-dismiss="modal">
+                              <span aria-hidden="true">×</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+
+														<button
+															type="button"
+															class="btn btn-outline-primary"
+															@click="triggerVarietiesFileInput(attributes.id)">
+															افزودن عکس
+														</button>
+
+                            <input
+                              type="file"
+                              :id="'variety-images-input' + attributes.id"
+                              :name="`product[varieties][${index}][images]`"
+                              multiple
+															hidden
+                              accept="image/*"
+															ref="fileInputs"
+                              @change="(e) => handleUploadVarietyImages(e, attributes.id)"
+                            />
+
+														<div class="row m-4">
+															<div v-for="(image, imgIndex) in getVarietyValue(attributes.id).images" :key="imgIndex" class="position-relative col-12 col-xl-3 col-md-6 my-2">
+																<img :src="image" alt="product-image" class="img-thumbnail image-size" style="width: 100%; height: auto;"/>
+																<span class="remove-btn" @click="deleteVarietyImage(attributes.id, imgIndex)">&times;</span>
+															</div>
+														</div>
+                        
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+									</template>
+								</tbody>
+							</table>
+						</div>
+
+						{{-- set price for varieties modal --}}
+						<div class="modal fade" id="set-price-for-varieties" style="display: none" aria-hidden="true">
+							<div class="modal-dialog modal-md" role="document">
+								<div class="modal-content modal-content-demo">
+									<div class="modal-body">
+										<div class="row">
+											<h2 class="col-12 text-center">قیمت جدید را وارد کنید</h2>
+											<div class="col-12">
+												<input 
+													type="number"
+													placeholder="قیمت به تومان" 
+													class="form-control"
+													v-model="generalPriceForVarieties"
+												/>
+											</div>
+										</div>
+										<div class="row mt-3">
+											<div class="col-12 d-flex justify-content-center">
+												<button class="btn btn-sm btn-danger" data-dismiss="modal">بستن</button>
+											</div>
 										</div>
 									</div>
-									<div class="col-12">
-										<div class="form-group">
-											<label for="product-meta-description">توضیحات متا :</label>
-											<textarea name="product[meta_description]" id="product-meta-description" class="form-control" rows="3" placeholder="توضیحات متا"></textarea>
-										</div>
-									</div>
 								</div>
-							</x-slot>
-						</x-card>
-					</div>
-				</div>
-			</div>
+							</div>
+						</div>
+
+					</x-slot>
+				</x-card>
+
+				{{-- specification --}}
+				<x-card>
+					<x-slot name="cardTitle">مشخصات محصول</x-slot>
+					<x-slot name="cardBody">
+						<div class="table-responsive mt-5">
+							<table class="table table-bordered text-nowrap text-center">
+								<thead class="border-top">
+									<tr>
+										<th style="width: 20%">نام</th>
+										<th style="width: 80%">مقدار</th>
+									</tr>
+								</thead>
+								<tbody>
+									<template v-for="(specification, index) in specifications" :key="index">
+										<tr>
+											<td style="padding: 10px">
+												<span class="fs-13" v-text="specification.label"></span>
+												<span v-show="specification.required" class="text-danger"> &starf;</span>
+												{{-- @{{ specification.label }} --}}
+											</td>
+											<td style="padding: 10px">
+												<input 
+													v-if="specification.type == 'text'"
+													class="form-control" 
+													type="text" 
+													:value="specification.id"
+													v-model="product.specifications[specification.id]"
+												>
+												<multiselect
+													v-else
+													dir="rtl"
+													label="value"
+													:options="specification.values"
+													track-by="id"
+													placeholder="انتخاب مقدار"
+													:multiple="specification.type == 'multi_select'"
+													:close-on-select="specification.type != 'multi_select'"
+													:required="specification.required"
+													class="custom-multiselect"
+													v-model="product.specifications[specification.id]"
+												></multiselect>
+											</td>
+										</tr>
+									</template>
+								</tbody>
+							</table>
+						</div>
+					</x-slot>
+				</x-card>
+
+				{{-- sizechart --}}  
+				<x-card>  
+					<x-slot name="cardTitle">سایز چارت</x-slot>  
+					<x-slot name="cardOptions">  
+						<div class="card-options">  
+							<button class="btn btn-sm btn-success" type="button" @click="addNewSizechart">افزودن سایز چارت</button>  
+						</div>  
+					</x-slot>  
+					<x-slot name="cardBody">  
+						<div v-for="(sizeChart, index) in product.size_charts" :key="index" class="row mb-5">  
+							<div class="col-12 mb-4">  
+								<button class="btn btn-danger btn-sm" type="button" @click="removeSizechart(index)">حذف سایز چارت</button>  
+							</div>  
+							<div class="col-12">  
+								<div class="form-group">  
+									<label :for="'size-chart-title-' + index">عنوان</label>  
+									<input  
+										:id="'size-chart-title-' + index"  
+										type="text"  
+										class="form-control"  
+										placeholder="لطفا عنوان ساییز چارت را وارد کنید"  
+										v-model="sizeChart.title"  
+									/>  
+								</div>  
+							</div>  
+							<div class="col-12">  
+								<div class="form-group">  
+									<label :for="'size-chart-type-' + index">نوع سایز چارت</label>  
+									<multiselect  
+										:id="'size-chart-type-' + index"  
+										dir="rtl"  
+										label="name"  
+										track-by="id"  
+										class="custom-multiselect"  
+										placeholder="انتخاب نوع سایز چارت"  
+										v-model="choosenSizecharts"
+										required  
+										:options="sizeChartTypes"
+										@select="(selectedSizeChartTypeObj) => addTypeAndChartToSizechart(selectedSizeChartTypeObj, index)"  
+										@remove="(removedSizeChartTypeObj) => removeTypeAndChartFromSizechart(index)"  
+									></multiselect>
+								</div>  
+							</div>  
+							<div v-show="sizeChart.chart.length" class="col-12 mt-4">  
+								<table class="table table-bordered text-nowrap text-center">  
+									<tbody>  
+										<template v-for="(charts, chartsIndex) in sizeChart.chart" :key="chartsIndex">  
+											<tr>  
+												<td v-for="(chartValue, chartValueIndex) in charts" :key="chartValueIndex">  
+													<input 
+														:disabled="chartsIndex === 0" 
+														type="text" 
+														class="form-control" 
+														v-model="product.size_charts[index].chart[chartsIndex][chartValueIndex]"
+													/>  
+												</td>  
+												<td>  
+													<button type="button" @click="addNewChartInputRow(index)" class="btn btn-sm btn-icon btn-success">+</button>  
+													<button  
+														v-if="chartsIndex > 0"  
+														type="button"  
+														@click="removeChartInputRow(index, chartsIndex)"  
+														:disabled="charts.length <= 2"  
+														class="btn btn-sm btn-icon btn-danger mr-1">-</button>  
+												</td>  
+											</tr>  
+										</template>  
+									</tbody>  
+								</table>  
+							</div>  
+						</div>  
+					</x-slot>  
+				</x-card>  
+
+      </div>
 			<div class="col-xl-4">
-				<div class="row">
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">انتشار</x-slot>
-							<x-slot name="cardOptions">
-								<div class="card-options" class="d-flex" style="gap: 5px;">
-									<button type="submit" class="btn btn-info" style="padding-inline: 24px; font-size: 12px;">ثبت محصول</button>
-								</div>
-							</x-slot>
-							<x-slot name="cardBody">
-								<div class="row align-items-center my-2">
-									<div class="col-xl-3"><label for="product-status">وضعیت :<span class="text-danger">&starf;</span></label></div>
-									<div class="col-xl-9">
-										<select class="form-control" name="product[status]" id="product-status" required>
-											<option value=""></option>
-											@foreach(config('product.prdocutStatusLabels') as $name => $label)
-												<option value="{{ $name }}">
-													{{ config('product.prdocutStatusColors.' . $name) }}
-												</option>
-											@endforeach
-										</select>
-									</div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-3"><label for="product-published-at">زمان انتشار :</label></div>
-									<div class="col-xl-9">
-										<input class="form-control fc-datepicker" id="product-published-at" type="text" autocomplete="off" placeholder="انتخاب زمان انتشار" />
-										<input name="product[published_at]" id="product-published-at-hide" type="hidden"/>
-									</div>
-								</div>
-							</x-slot>
-						</x-card>
-					</div>
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">قیمت گذاری</x-slot>
-							<x-slot name="cardOptions"><x-card-options/></x-slot>
-							<x-slot name="cardBody">
-								<div class="row align-items-center my-2">
-									<div class="col-xl-4"><label for="product-unit-price">قیمت واحد :<span class="text-danger">&starf;</span></label></div>
-									<div class="col-xl-8">
-										<input type="text" class="form-control comma" placeholder="قیمت واحد" name="product[unit_price]" id="product-unit-price" required/>
-									</div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-4"><label for="product-purchase-price">قیمت خرید :</label></div>
-									<div class="col-xl-8">
-										<input type="text" class="form-control comma" placeholder="قیمت خرید" name="product[purchase_price]" id="product-purchase-price"/>
-									</div>
-								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-4"><label for="product-discount-type">نوع تخفیف :</label></div>
-									<div class="col-xl-8">
-										<select name="product[discount_type]" id="product-discount-type" class="form-control discount-type">
-											<option value="">بدون تخفیف</option>
-											<option value="flat">قیمت  ثابت</option>
-											<option value="percentage">درصد</option>
-										</select>
-									</div>
-								</div>
 
-								<div class="row align-items-center my-2 d-none" id="product-discount-section">
-									<div class="col-xl-4"><label for="product-discount-type">تخفیف :</label></div>
-									<div class="col-xl-8">
-										<input type="text" class="form-control comma" name="product[discount]" id="product-discount"/>
-									</div>
+				{{-- publish --}}
+				<x-card>
+					<x-slot name="cardTitle">انتشار</x-slot>
+					<x-slot name="cardOptions">
+						<div class="card-options">
+							<button class="btn btn-sm btn-primary" type="button" @click="storeProduct">ثبت محصول</button>
+						</div>
+					</x-slot>
+					<x-slot name="cardBody">
+
+						<div class="row align-items-center mb-2">
+							<div class="col-xl-4">
+								<label for="status-select">وضعیت<span class="text-danger">&starf;</span></label>
+							</div>
+							<div class="col-xl-8">
+								<multiselect
+									dir="rtl"
+									id="status-select"
+									class="custom-multiselect"
+									v-model="product.status"
+									label="label"
+									placeholder="انتخاب وضعیت محصول"
+									:options="productsStatuses"
+									:select-label="null"
+									:deselect-label="null"
+									:selected-label="null"
+									required
+								></multiselect>
+							</div>
+						</div>
+
+						<div class="row align-items-center mb-2">
+							<div class="col-xl-4">
+								<label for="status-select">زمان انتشار</label>
+							</div>
+							<div class="col-xl-8">
+								<date-picker 
+									id="published-at" 
+									v-model="product.published_at" 
+									type="datetime" 
+									format="YYYY-MM-DD HH:mm"
+									display-format="jYYYY/jM/jD HH:mm"
+								/>
+							</div>
+						</div>
+
+					</x-slot>
+				</x-card>
+
+				{{-- images --}}
+				<x-card>
+					<x-slot name="cardTitle">عکس‌ها</x-slot>
+					<x-slot name="cardOptions">
+						<div class="card-options">
+							<button
+								type="button"
+								id="add-image-btn"
+								class="btn btn-sm btn-outline-info"
+								onclick="document.getElementById('product-images-input').click()"
+							>افزودن عکس
+							</button>
+						</div>
+					</x-slot>
+					<x-slot name="cardBody">
+						<div class="row">
+							<input
+								type="file"
+								id="product-images-input"
+								hidden
+								multiple
+								accept="image/*"
+								@change="handleUploadImages"
+							/>
+						</div>
+						<div class="row mt-3">
+							<div v-for="(image, index) in product.images" :key="index" class="position-relative col-md-6 my-2">
+								<img :src="image" alt="product-image" class="img-thumbnail image-size" style="width: 100%; height: auto;"/>
+								<span class="remove-btn" @click="deleteImage(index)">&times;</span>
+							</div>
+						</div>
+					</x-slot>
+				</x-card>
+
+				{{-- video --}}
+				<x-card>
+					<x-slot name="cardTitle">ویدیو محصول</x-slot>
+					<x-slot name="cardBody">
+						<div class="row align-items-center my-2">
+							<div class="col-12">
+								<div class="custom-file">
+									<input 
+										id="product-video-cover" 
+										type="file" 
+										class="custom-file-input"
+										accept="image/*" 
+										@change="handleUploadVideoCover"
+									>
+									<label class="custom-file-label">انتخاب کاور ویدیو</label>
 								</div>
-								<div class="row align-items-center my-2 d-none" id="product-discount-until-section">
-									<div class="col-xl-4"><label for="product-discount-until">تخفیف تا زمان :</label></div>
-									<div class="col-xl-8">
-										<input class="form-control fc-datepicker" id="product-discount-until" type="text" autocomplete="off" placeholder="انتخاب زمان اتمام تخفیف" />
-										<input name="product[discount_until]" id="product-discount-until-hide" type="hidden"/>
-									</div>
+							</div>
+						</div>
+						<div class="row align-items-center my-2">
+							<div class="col-12">
+								<div class="custom-file">
+									<input 
+										type="file" 
+										id="product-video" 
+										class="custom-file-input"
+										accept="video/*"
+										@change="handleUploadVideo"
+									>
+									<label class="custom-file-label">انتخاب ویدیو</label>
 								</div>
-								<div class="row align-items-center my-2">
-									<div class="col-xl-4"><label for="product-low-stock-quantity-warning">اخطار موجودی :<span class="text-danger">&starf;</span></label></div>
-									<div class="col-xl-8">
-										<input type="number" class="form-control" placeholder="اخطار موجودی" name="product[low_stock_quantity_warning]" id="product-low-stock-quantity-warning" required/>
-									</div>
+							</div>
+						</div>
+					</x-slot>
+				</x-card>
+				
+				{{-- pricing --}}
+				<x-card>
+					<x-slot name="cardTitle">قیمت گذاری</x-slot>
+					<x-slot name="cardBody">
+
+						{{-- unit price --}}
+						<div class="row align-items-center mb-2">
+							<div class="col-xl-4">
+								<label for="product-unit-price">قیمت واحد</label>
+							</div>
+							<div class="col-xl-8">
+								<input 
+									id="product-unit-price" 
+									type="text"
+									v-model="product.unit_price" 
+									class="form-control" 
+									placeholder="قیمت را به تومان وارد کنید"
+									@input="formatAmount($event, product.unit_price)"
+								>
+							</div>
+						</div>
+
+						{{-- purchase price --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-4">
+								<label for="product-purchase-price">قیمت خرید</label>
+							</div>
+							<div class="col-xl-8">
+								<input id="product-purchase-price" v-model="product.purchase_price" type="number" class="form-control" placeholder="قیمت خرید را به تومان وارد کنید">
+							</div>
+						</div>
+
+						{{-- discount type --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-4">
+								<label for="product-discount-type">نوع تخفیف</label>
+							</div>
+							<div class="col-xl-8">
+								<multiselect
+									dir="rtl"
+									id="product-discount-type" 
+									name="product[discount_type]"
+									class="custom-multiselect"
+									label="label"
+									track-by="name"
+									placeholder="انتخاب نوع تخفیف"
+									v-model="product.discount_type"
+									@select="logDiscountType"
+									:options="discountTypes"
+									:select-label="null"
+									:deselect-label="null"
+									:selected-label="null"
+								></multiselect>
+							</div>
+						</div>
+
+						{{-- discount --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-4">
+								<label for="product-discount">تخفیف</label>
+							</div>
+							<div class="col-xl-8">
+								<input 
+									id="product-discount" 
+									type="number" 
+									class="form-control" 
+									v-model="product.discount"
+									:max="product.discount_type?.name == 'percentage' ? 100 : ''"
+									placeholder="مقدار تخفیف را وارد کنید"
+								/>
+							</div>
+						</div>
+
+						{{-- discount until --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-4">
+								<label for="product-discount-until">زمان اتمام تخفیف</label>
+							</div>
+							<div class="col-xl-8">
+								<date-picker 
+									id="product-discount-until" 
+									v-model="product.discount_until" 
+									type="datetime" 
+									format="YYYY/MM/DD HH:mm"
+									display-format="jYYYY/jM/jD HH:mm"
+								/>
+							</div>
+						</div>
+
+						{{-- threshold quantity --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-4">
+								<label for="product-threshold-quantity">تعداد آستانه</label>
+							</div>
+							<div class="col-xl-8">
+								<input id="product-threshold-quantity" type="number" class="form-control" v-model="product.threshold_quantity"placeholder="تعداد آستانه را وارد کنید"/>
+							</div>
+						</div>
+
+						{{-- threshold date --}}
+						<div class="row align-items-center my-2">
+							<div class="col-xl-4">
+								<label for="product-threshold-date">تاریخ آستانه</label>
+							</div>
+							<div class="col-xl-8">
+								<date-picker 
+									id="product-threshold-date" 
+									v-model="product.threshold_date" 
+									type="datetime" 
+									format="YYYY/MM/DD HH:mm"
+									display-format="jYYYY/jM/jD HH:mm"
+								/>
+							</div>
+						</div>
+
+					</x-slot>
+				</x-card>
+
+				{{-- settings --}}
+				<x-card>
+					<x-slot name="cardTitle">تنظیمات</x-slot>
+					<x-slot name="cardBody">
+						<div class="row align-items-center mb-2">
+							<div class="col-xl-4">
+								<label for="product-low-stock-quantity-warning">اخطار موجودی <span class="text-danger">&starf;</span></label>
+							</div>
+							<div class="col-xl-8">
+								<input id="product-low-stock-quantity-warning" type="number" v-model="product.low_stock_quantity_warning" class="form-control">
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+								<label for="chargeable-checkbox" class="custom-control custom-checkbox">
+									<input id="chargeable-checkbox" v-model="product.chargeable" type="checkbox" class="custom-control-input" value="1"/>
+									<span class="custom-control-label">قابل شارژ</span>
+								</label>
+							</div>
+							<div class="col-12">
+								<label for="send-notif-to-customers" class="custom-control custom-checkbox">
+									<input id="send-notif-to-customers" type="checkbox" class="custom-control-input" value="1"/>
+									<span class="custom-control-label">ارسال نوتیفیکیشن به کاربران در انتظار</span>
+								</label>
+							</div>
+							<div class="col-12">
+								<label for="show-quantity" class="custom-control custom-checkbox">
+									<input id="show-quantity" v-model="product.show_quantity" type="checkbox" class="custom-control-input" value="1"/>
+									<span class="custom-control-label">مشاهده موجودی</span>
+								</label>
+							</div>
+						</div>
+					</x-slot>
+				</x-card>
+
+				{{-- SEO --}}
+				<x-card>
+					<x-slot name="cardTitle">اطلاعات سئو</x-slot>
+					<x-slot name="cardBody">
+						<div class="row">
+							<div class="col-12">
+								<div class="form-group">
+									<label for="product-meta-title">عنوان متا</label>
+									<input  id="product-meta-title" placeholder="عنوان متا" class="form-control" v-model="product.meta_title" type="text">
 								</div>
-							</x-slot>
-						</x-card>
-					</div>
-					<div class="col-12">
-						<x-card>
-							<x-slot name="cardTitle">تنظیمات نمایش</x-slot>
-							<x-slot name="cardOptions"><x-card-options/></x-slot>
-							<x-slot name="cardBody">
-								<div class="row">
-									@php
-										$displaySetting = [
-											['name' => 'product[chargeable]', 'label' => 'قابل شارژ'],
-											['name' => 'product[new_product_in_home]', 'label' => 'نمایش در لیست محصولات جدید'],
-											['name' => 'product[is_package]', 'label' => 'محصولات پکیج'],
-											['name' => 'product[is_benibox]', 'label' => 'محصولات بنی باکس'],
-											['name' => 'product[is_amazing]', 'label' => 'محصولات شگفت انگیز'],
-											['name' => 'product[free_shipping]', 'label' => 'ارسال رایگان'],
-										];
-									@endphp
-									@foreach ($displaySetting as $d)
-										<div class="col-12 form-group">
-											<label class="custom-control custom-checkbox">
-												<input type="checkbox" class="custom-control-input" name="{{ $d['name'] }}" value="1" />
-												<span class="custom-control-label">{{ $d['label'] }}</span>
-											</label>
-										</div>
-									@endforeach
+							</div>
+							<div class="col-12">
+								<div class="form-group">
+									<label for="product-meta-description">توضیحات متا</label>
+									<textarea id="product-meta-description" placeholder="توضیحات متا" class="form-control" v-model="product.meta_description" rows="4"></textarea>
 								</div>
-							</x-slot>
-						</x-card>
-					</div>
-				</div>
+							</div>
+						</div>
+					</x-slot>
+				</x-card>
+
 			</div>
-		</div>
-		<button type="submit" class="btn btn-info" style="padding-inline: 24px; font-size: 12px; margin-bottom: 32px;">ثبت محصول</button>
-    </form>
+    </div>
+  </form>
+</div>
 
-
-    <div id="example-attribute-value-select" class="col-12 d-none my-2 attribute-value-select">  
-		<div class="row">  
-			<div class="col-xl-2">  
-				<label for=""></label>  
-			</div>  
-			<div class="col-xl-10 select-box-div">  
-			</div>  
-		</div>  
-	</div>  
-
-    <x-modal id="edit-variety-modal-example" size="md">
-        <x-slot name="title">اطلاعات تنوع</x-slot>
-        <x-slot name="body">
-            <div class="row">
-                <div class="col-12">
-                    <div class="form-group">
-						<label class="mb-1" for="">قیمت خرید (تومان) :</label>
-                        <input type="text" class="form-control purchase-price comma" placeholder="قیمت خرید را به تومان وارد کنید" name="" />
-                    </div>
-                </div>
-				<div class="col-12">
-                    <div class="form-group">
-						<label class="mb-1" for="">تخفیف :</label>
-						<select name="" class="form-control discount-type" onchange="showDiscountAmountInput(event)">
-							<option value="">بدون تخفیف</option>
-							<option value="flat">قیمت  ثابت</option>
-							<option value="percentage">درصد</option>
-						</select>
-						<input type="text" class="form-control mt-3 discount d-none comma" name="" placeholder="">
-                    </div>
-                </div>
-				<div class="col-12">
-                    <div class="form-group">
-						<label class="mb-1" for="">بارکد :</label>
-                        <input type="text" class="form-control barcode" placeholder="بارکد" name="" />
-                    </div>
-                </div>
-				<div class="col-12">
-                    <div class="form-group">
-						<label class="mb-1" for="">SKU :</label>
-                        <input type="text" class="form-control SKU" placeholder="SKU" name="" />
-                    </div>
-                </div>
-            </div>
-        </x-slot>
-		<x-slot name="footer">
-			<button type="button" class="btn btn-outline-danger" data-dismiss="modal">بستن</button>
-		</x-slot>
-    </x-modal>
-
-	<x-modal id="select-variety-images-modal-example" size="lg">
-        <x-slot name="title"></x-slot>
-        <x-slot name="body">
-            <div class="row m-5">
-				<button 
-					type="button" class="btn btn-primary" 
-					onclick="$(this).closest('.modal').find('.variety-images-input').click()">
-					افزودن عکس
-				</button>
-				<input 
-					type="file" 
-					class="variety-images-input" 
-					name="" 
-					hidden 
-					multiple 
-					accept="image/*" 
-					onchange="showProductImages(event, $(this).closest('.modal').find('.show-variety-images-section'))"
-				/>
-            </div>
-			<div class="row m-4 show-variety-images-section"></div>
-        </x-slot>
-    </x-modal>
+<div style="margin-bottom: 200px"></div>
 
 @endsection
 
 @section('scripts')
 
-	@include('core::includes.date-input-script', [
-		'dateInputId' => 'product-published-at-hide',
-		'textInputId' => 'product-published-at',
-	])
-	
-	@include('core::includes.date-input-script', [
-		'dateInputId' => 'product-discount-until-hide',
-		'textInputId' => 'product-discount-until',
-	])
+<script src="{{ asset('assets/vue/vue3/vue.global.prod.js') }}"></script>
+<script src="{{ asset('assets/vue/multiselect/vue-multiselect.umd.min.js') }}"></script>
 
-    <script>
-		
-		class CustomSelect {  
-			constructor(selector, placeholder) {  
-				this.selector = selector;  
-				this.placeholder = placeholder;  
+<script src="https://cdn.jsdelivr.net/npm/moment"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.9.2/build/moment-jalaali.js"></script>
+<script src="{{ asset('assets/vue/date-time-picker/vue3-persian-datetime-picker.umd.min.js') }}"></script>
 
-				this.initSelect2();  
-			}  
+<script>
+  const {
+    createApp
+  } = Vue;
 
-			initSelect2() {  
-				$(this.selector).select2({  
-					placeholder: this.placeholder,  
-					allowClear: true,  
-					dir: 'rtl',
-					language: {  
-						noResults: () => {  
-							return "موردی یافت نشد !";  
-						}  
+  createApp({
+    components: {
+      'multiselect': window['vue-multiselect'].default,
+			'date-picker': Vue3PersianDatetimePicker,
+    },
+    data() {
+      return {
+        message: "Hello Vue!",
+        categories: @json($categories),
+        attributes: @json($attributes),
+        brands: @json($brands),
+        units: @json($units),
+        tags: @json($tags),
+				specifications: @json($specifications),
+				sizeChartTypes: @json($sizeChartTypes),
+				productsStatuses: @json($productsStatuses),
+				discountTypes: @json($discountTypes),
+				generalPriceForVarieties: null,
+				hasPublishedAt: false,
+				choosenSizecharts: null,
+        product: {
+					title: null,
+					quantity: null,
+					SKU: null,
+					barcode: null,
+					image_alt: null,
+					status: [],
+					published_at: null,
+					unit_price: null,
+					purchase_price: null,
+					discount_type: [],
+					discount: null,
+					discount_until: null,
+					description: null,
+					meta_description: null,
+					meta_title: null,
+					threshold_date: null,
+					threshold_quantity: null,
+					video: null,
+					video_cover: null,
+					chargeable: false,
+					low_stock_quantity_warning: null,
+					show_quantity: false,
+          images: [],
+          categories: [],
+          attributes: [],
+          attribute_values: {},
+          specifications: {},
+					variety_values: {},
+					size_charts: [],
+					tags: [],
+          unit: [],
+          brand: [],
+        }
+      };
+    },
+		watch: {  
+			generalPriceForVarieties(newValue) {  
+				Object.values(this.product.variety_values)?.forEach(variety => variety.price = newValue);			
+			},
+		},
+    methods: {
+      addNewTag(value, attribute) {
+        this.clearVarietyValues();
+        this.product.attribute_values[attribute.id] = this.product.attribute_values[attribute.id] || [];
+        const id = value.substring(0, 2) + Math.floor((Math.random() * 10000000))
+        this.product.attribute_values[attribute.id].push({ value, id });
+      },
+      handleUploadImages(e) {
+        const files = Array.from(e.target.files);
+        files.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.product.images.push(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      },
+			handleUploadVideoCover(e) {  
+        const videoCoverFile = e.target.files[0];  
+        if (videoCoverFile) {  
+					const reader = new FileReader();  
+					reader.onload = (e) => {  
+						this.product.video_cover = e.target.result;
+					};  
+					reader.readAsDataURL(videoCoverFile);  
+        }  
+			},  
+			handleUploadVideo(e) {  
+        const videoFile = e.target.files[0];  
+        if (videoFile) {  
+					const reader = new FileReader();  
+					reader.onload = (e) => {  
+						this.product.video = e.target.result;
+					};  
+					reader.readAsDataURL(videoFile);  
+        }  
+			},
+      deleteImage(index) {
+        this.product.images.splice(index, 1);
+      },
+      getVarietyValue(attributeId) {
+        if (!this.product.variety_values[attributeId]) {
+          this.product.variety_values[attributeId] = {
+            price: 0,
+						purchase_price: null,
+            barcode: '',
+            SKU: '',
+            quantity: 0,
+            images: [],
+						discount_type: '',
+						discount: null,
+          };
+          this.product.variety_values = { ...this.product.variety_values };
+        }
+
+        return this.product.variety_values[attributeId];
+      },
+      handleUploadVarietyImages(e, attributeId) {
+        const files = Array.from(e.target.files);
+        files.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.getVarietyValue(attributeId).images.push(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      },
+			deleteVarietyImage(attributeId, index) {
+				this.product.variety_values[attributeId].images.splice(index, 1);
+			},
+			triggerVarietiesFileInput(attributeId) {  
+				this.$refs.fileInputs.forEach(input => {  
+					if (input.id === 'variety-images-input' + attributeId) {  
+						input.click();
+						return; 
 					}  
 				});  
-			}  
-		}  
-
-		new CustomSelect('#product-brand-id', 'انتخاب برند');  
-		new CustomSelect('#product-unit-id', 'انتخاب واحد');  
-		new CustomSelect('#product-tags', 'انتخاب تگ ها');
-		new CustomSelect('#product-status', 'انتخاب وضعیت');
-		new CustomSelect('#categories-select', 'انتخاب دسته بندی ها');  
-		new CustomSelect('#attributes-select', 'انتخاب ویژگی ها'); 
-
-        const varietiesTable = $('#varieties-table');
-        const productDiscountTypeSelectBox = $('#product-discount-type');  
-        const varietiesTableBody = varietiesTable.find('tbody');
-
-		const categoriesSelect = $('#categories-select');
-		const attributesSelect = $('#attributes-select');
-
-        const allCategories = @json($categories);
-        const allAttributes = @json($attributes);
-
-        const option = $('<option value=""></option>');
-		let index = 0;
-
-        let exampleTableRow = $('#example-tr').clone(); 
-		let exampleEditVarietyModal = $('#edit-variety-modal-example').clone(); 
-		let exampleImageVarietyModal = $('#select-variety-images-modal-example').clone();
-		let exampleAttributeValueSelect = $('#example-attribute-value-select');
-
-        function loadAttributesFromCategories() {
-			
-            const selectedCategories = categoriesSelect.val();
-            const selectedAttributeIds = new Set();
-
-            attributesSelect.empty().append(option.clone());
-
-            selectedCategories.forEach(categoryId => {
-
-                const category = allCategories.find((c) => c.id === parseInt(categoryId));
-                const categoryAttributes = category.attributes;
-				console.log(category.attributes);
-
-                if (categoryAttributes && categoryAttributes.length > 0) {
-                    categoryAttributes.forEach(attribute => {
-                        if (!selectedAttributeIds.has(attribute.id)) {
-                            const newAttributeOption = option.clone().attr('value', attribute.id).text(
-                                attribute.name);
-                            attributesSelect.append(newAttributeOption);
-                            selectedAttributeIds.add(attribute.id);
-                        }
-                    });
-                }
-            });
-        }
-
-        function makeAttributeValueSelectFromAttributes() {  
-
-			const attributeIdsArray = attributesSelect.val();  
-			$('#attributesContainer').empty();  
-			
-			attributeIdsArray.forEach(attributeId => {  
-				const attribute = allAttributes.find((a) => a.id === parseInt(attributeId));  
-
-				if (attribute /* && attribute.type === 'select' */) {
-					let selectSection = exampleAttributeValueSelect.clone();
-
-					selectSection
-						.removeAttr('id')
-						.removeClass('d-none')
-						.find('label')
-						.html(`<span>ویژگی : <b>${attribute.name}</b></span>`);  
-						
-					let select = $('<select multiple></select>')
-						.attr('data-attribute-id', attribute.id)
-						.attr('data-attribute-name', attribute.name)
-						.addClass('form-control')
-						.append(option.clone())
-						.select2({
-							placeholder: attribute.type === 'text' ? 'مقادیر ویژگی را وارد کنید' : 'انتخاب مقدار ویژگی',  
-							tags: attribute.type === 'text' ? true : false
-						});
-
-					attribute.values.forEach(value => select.append(`<option value="${value.id}">${value.value}</option>`));
-					selectSection.find('.select-box-div').html(select);
-					$('#attributesContainer').append(selectSection);  
-				}  
-			});  
-
-			$('#attributesContainer').find('select').select2({  
-				placeholder: 'انتخاب مقدار ویژگی',  
-			});  
-		
-		}
-
-		function updateTable(selectedValues) {
-
-			varietiesTableBody.empty();  
-
-			$('.modal').each(function() {
-				$(this).remove()
-			});
-    
-			let groupedValues = {};  
-			selectedValues.forEach(item => {  
-				if (!groupedValues[item.attributeId]) {  
-					groupedValues[item.attributeId] = [];  
-				}  
-				groupedValues[item.attributeId].push(item);  
-			});  
-
-			let valuesArray = Object.values(groupedValues).map(group =>  
-				group.map(v => ({  
-					valueId: v.valueId,  
-					valueName: v.valueName,  
-					attributeId: v.attributeId 
-				}))  
-			);  
-
-			let combinations = generateCombinations(valuesArray);  
-			
-			if (combinations.length > 0) {
-				combinations.forEach(combination => {  
-
-					let newRow = exampleTableRow.clone().removeClass('d-none').removeAttr('id');  
-					let title = combination.map(v => v.valueName).join(' - ');  
-					let attributeInputs = '';  
-					
-					index++;
-
-					combination.forEach(v => {  
-						attributeInputs += `  
-							<input type="hidden" name="product[varieties][${index}][attributes][${v.attributeId}][id]" value="${v.attributeId}">  
-							<input type="hidden" name="product[varieties][${index}][attributes][${v.attributeId}][value]" value="${v.valueId}">  
-						`;  
-					});  
-
-					let editId = 'edit-variety-modal-' + index; 
-					let imageId = 'select-variety-images-modal-' + index;  
-					let imageBtn = makeVarietyOperationButtons('image', imageId);  
-					let editBtn = makeVarietyOperationButtons('edit', editId);  
-					let imageModal = makeVarietyImageModal(imageId, index);  
-					let editModal = makeVarietyEditModal(editId, index);  
-
-					newRow.find('.title').text(title).append(attributeInputs);  
-					newRow.find('.price').html(`<input type="text" name="product[varieties][${index}][price]" class="form-control comma"/>`);
-					newRow.find('.weight').html(`<input type="number" name="product[varieties][${index}][weight]" class="form-control"/>`);  
-					newRow.find('.max-number-purchases').html(`<input type="number" name="product[varieties][${index}][max_number_purchases]" class="form-control"/>`);  
-					newRow.find('.quantity').html(`<input type="number" name="product[varieties][${index}][quantity]" class="form-control"/>`);  
-					newRow.find('.operation').append(imageBtn).append(editBtn);  
-					
-					$('#MainForm').append(imageModal).append(editModal);  
-					varietiesTableBody.append(newRow); 
-
-					Sortable.create(document.querySelector('#varieties-table tbody'), {  
-						handle: '.glyphicon-move',  
-						animation: 150,  
-					});  
-
-				});  
-				comma($('#varieties-table'));
-			} else {  
-				varietiesTableBody.append('<tr><td colspan="6" class="text-center">هیچ تنوعی پیدا نشد.</td></tr>');  
-			}  
-		}
-
-		function generateCombinations(values) {
-
-			if (values.length === 0) return [];
-			if (values.length === 1) return values[0].map(v => [v]);
-
-			let result = [];
-			let rest = generateCombinations(values.slice(1));
-			values[0].forEach(v => {
-				rest.forEach(r => {
-					result.push([v, ...r]);
-				});
-			});
-
-			return result;
-		}
-
-        function updateAttributeValueSelects() {
-            $('#attributesContainer').empty();
-            makeAttributeValueSelectFromAttributes();
-        }
-
-        function makeVarietyOperationButtons(type, target) {
-
-            const button = $('<button></button>');
-            const icon = $('<i></i>');
-
-            icon.addClass('fa');
-            button.addClass(['btn', 'btn-sm', 'btn-icon']);
-            button.attr('type', 'button');
-            button.attr('data-toggle', 'modal');
-   			button.attr('data-target', '#' + target);  
-
-            if (type === 'image') {
-                icon.addClass('fa-image');
-                button.addClass(['btn-success', 'ml-1']);
-            }
-            else {
-                icon.addClass('fa-pencil');
-                button.addClass(['btn-warning', 'mr-1']);
-            }
-
-            button.append(icon);
-
-            return button;
-        }
-
-        function makeVarietyEditModal(modalId, counter) {
-
-			const modal = exampleEditVarietyModal.clone();
-			
-			modal.attr('id', modalId);
-			modal.find('input.purchase-price').attr('name', `product[varieties][${counter}][purchase_price]`);
-			modal.find('select.discount-type').attr('name', `product[varieties][${counter}][discount_type]`);
-			modal.find('input.discount').attr('name', `product[varieties][${counter}][discount]`);
-			modal.find('input.barcode').attr('name', `product[varieties][${counter}][barcode]`);
-			modal.find('input.SKU').attr('name', `product[varieties][${counter}][SKU]`);
-
-			comma(modal);
-
-			return modal;
-        }
-
-		function makeVarietyImageModal(modalId, counter) {
-
-			let modal = exampleImageVarietyModal.clone();
-
-			modal.attr('id', modalId);
-			modal.find('.variety-images-input').attr('name', `product[varieties][${counter}][images][]`);
-
-			return modal;
-		}
-
-		function showDiscountAmountInput(e) {
-
-			const discountTypeSelect = $(e.target);
-			const discountAmountInput = discountTypeSelect.closest('.modal').find('.discount');
-
-			if (discountAmountInput.hasClass('d-none')) {
-				discountAmountInput.removeClass('d-none');
-			}
-
-			if (discountTypeSelect.val() === 'flat') {
-				discountAmountInput.attr('placeholder', 'مقدار تخفیف را به تومان وارد کنید');
-			}else if(discountTypeSelect.val() === 'percentage') {
-				discountAmountInput.attr('placeholder', 'درصد تخفیف باید بین 1 تا 100 باشد');
-			}else {
-				if (!discountAmountInput.hasClass('d-none')) {
-					discountAmountInput.addClass('d-none');
-				}
-			}
-
-		}
-
-		function showProductDiscountSection(e) {
-			 
-			const discountTypeSelect = $(e.target);  
-			const discountSection = $('#product-discount-section');  
-			const discountUntilSection = $('#product-discount-until-section');  
-
-			const selectedValue = discountTypeSelect.val();  
-
-			if (selectedValue === 'flat' || selectedValue === 'percentage') {  
-				discountSection.removeClass('d-none');  
-				discountUntilSection.removeClass('d-none');  
-			} else {  
-				if (!discountSection.hasClass('d-none')) {  
-					discountSection.addClass('d-none');  
-					discountSection.find('#product-discount').val(null); 
-				}  
-				if (!discountUntilSection.hasClass('d-none')) {  
-					discountUntilSection.addClass('d-none');  
-					discountUntilSection.find('#product-discount-until').val(null); 
-				}  
-			}  
-		}  
-
-		function showProductImages(event, sectionToShowImages) {
-
-            sectionToShowImages.empty();  
-            $.each(event.target.files, function(index, file) {  
-                const reader = new FileReader();  
-
-                reader.onload = function(e) {  
-
-                    const imgContainer = $('<div>', {  
-                        class: 'position-relative col-2 my-2'  
-                    });  
-
-                    const img = $('<img>', {  
-                        src: e.target.result,  
-                        class: 'img-thumbnail image-size',  
-                        style: 'width: 100%; height: auto;'  
-                    });  
-
-                    const removeBtn = $('<span>', {  
-                        class: 'remove-btn',  
-                        html: '&times;', 
-                        css: {  
-                            position: 'absolute',  
-                            top: '5px',  
-                            right: '5px',  
-                            color: 'red',  
-                            fontSize: '20px',  
-                            cursor: 'pointer',  
-                            display: 'none', 
-                        }  
-                    });   
-
-                    imgContainer.on('mouseenter', () => {  
-                        removeBtn.fadeIn(100); 
-                    }).on('mouseleave', function() {  
-                        removeBtn.fadeOut(100); 
-                    });  
-
-                    removeBtn.on('click', () => {  
-                        imgContainer.remove();
-                    });  
-
-                    imgContainer.append(img).append(removeBtn);  
-                    sectionToShowImages.append(imgContainer);  
-
-                };  
-
-                reader.readAsDataURL(file);  
-            });  
-		}
-
-		function addPlaceholderToSpecificationsSelectBox() {  
-			$('#specifications-table').find('tbody tr').each(function(index) {  
-				let selectBox = $(this).find('select');  
-				if (selectBox.length > 0) {  
-					let selectBoxId = selectBox.attr('id');  
-					new CustomSelect('#' + selectBoxId, 'انتخاب مقدار'); 
-				}  
-			});  
-		}  
-
-		function comma(el) {  
-			el.on("keyup", "input.comma", function (event) {  
-				if (event.which >= 37 && event.which <= 40) return;  
-				$(this).val(function (index, value) {  
-					return value  
-						.replace(/\D/g, "")  
-						.replace(/\B(?=(\d{3})+(?!\d))/g, ",");  
-				});  
-			});  
-		}  
-
-		addPlaceholderToSpecificationsSelectBox();
-
-		$(document).ready(() => {
-
-			varietiesTableBody.empty();
-
-			productDiscountTypeSelectBox.on('change', (event) => {  
-				showProductDiscountSection(event);  
-			}); 
-
-			categoriesSelect.on('change', () => {
-				loadAttributesFromCategories();
-				updateAttributeValueSelects();
-			});
-
-			attributesSelect.on('change', () => {
-				updateAttributeValueSelects();
-			});
-
-			$(document).on('change', '#attributesContainer select', function() {
-
-				let selectedValues = [];
-
-				$('#attributesContainer select').each(function() {
-
-					let attributeId = $(this).attr('data-attribute-id');
-					let attributeName = $(this).attr('data-attribute-name');
-
-					$(this).val().forEach(valueId => {
-						selectedValues.push({
-							attributeId: attributeId,
-							attributeName: attributeName,
-							valueId: valueId,
-							valueName: $(this).find('option[value="'+valueId+'"]').text()
-						});
+			},  
+      clearVarietyValues() {
+        this.product.variety_values = {};
+      },
+			addNewSizechart() {  
+      this.product.size_charts.push({  
+        title: '',  
+        type_id: null,  
+        chart: [],  
+      });  
+    },  
+			addTypeAndChartToSizechart(selectedSizeChartTypeObj, index) {  
+				const chartArr = ['سایزبندی', ...selectedSizeChartTypeObj.values.map(value => value.name)];  
+
+				this.product.size_charts[index].type_id = selectedSizeChartTypeObj.id;  
+				this.product.size_charts[index].chart = [chartArr];  
+			},
+			removeTypeAndChartFromSizechart(index) {
+				this.product.size_charts[index].type_id = null;  
+				this.product.size_charts[index].chart = [];  
+			},
+			addNewChartInputRow(sizeChartIndex) {  
+				const newChartValueArray = Array(this.product.size_charts[sizeChartIndex].chart[0].length).fill('');  
+				this.product.size_charts[sizeChartIndex].chart.push(newChartValueArray);  
+			},  
+			removeChartInputRow(sizeChartIndex, chartIndex) {  
+				this.product.size_charts[sizeChartIndex].chart.splice(chartIndex, 1);  
+			},  
+			removeSizechart(sizeChartIndex) {  
+				this.product.size_charts.splice(sizeChartIndex, 1); 
+			},  
+			compileSpecifications() {
+
+				if (Object.keys(this.product.specifications).length < 1) {
+					return [];
+				};
+
+				const specifications = [];
+				specifications.push(  
+					...Object.entries(this.product.specifications).map(([specificationId, specificationValues]) => {  
+						const specification = this.specification.find(s => s.id == specificationId);
+						const values = specification.type == 'multi_select'  
+							? specificationValues.map(specificationValue => specificationValue.value)   
+							: specificationValues[0].value;
+						return {  
+							id: specificationId,  
+							value: values  
+						};  
+					})
+				);  
+
+				return specifications;
+			},
+			async storeProduct() {
+
+				const clonedProduct = JSON.parse(JSON.stringify(this.product));
+
+				clonedProduct.categories = this.product.categories?.map(category => category.id) || [];
+				clonedProduct.brand_id = this.product.brand?.id || null;
+				clonedProduct.unit_id = this.product.unit?.id || null;
+				clonedProduct.tags = this.product.tags?.map(tag => tag.id) || [];
+				clonedProduct.specifications = this.compileSpecifications();
+				clonedProduct.status = this.product.status?.name || null;
+				clonedProduct.discount_type = this.product.discount_type?.name || null;
+
+				delete clonedProduct.brand;
+				delete clonedProduct.unit;
+				delete clonedProduct.attribute_values;
+				delete clonedProduct.variety_values;
+				delete clonedProduct.attributes;
+
+				try {
+					const response = await fetch(@json(route('admin.products.store')), {
+						method: 'POST',
+						headers: {
+							'Accept': 'application/json',
+							'Content-Type': 'application/json',
+							'X-CSRF-TOKEN': @json(csrf_token())
+						},
+						body: JSON.stringify({ product: clonedProduct }),
 					});
 
-				});
+					if (!response.ok) { 
+						console.log('request failed:', response.json());
+					} else {
+						console.log('request success', response.json());
+					}
+				} catch (error) {
+					console.error('There was a problem with the submission:', error);
+				}
 
-				updateTable(selectedValues);
-			});
+			},
+		},
+    computed: {
+      uniqueAttributes() {
+        const selectedCategoriesAttributes = this.product.categories
+          .map((category) => category.attributes)
+          .flat();
 
-		});
+        // Remove duplicate attributes
+        const uniqueAttributes = selectedCategoriesAttributes.filter(
+          (attribute, index, self) => index === self.findIndex(
+            (t) => t.id === attribute.id && t.title === attribute.title
+          )
+        );
 
-    </script>
+        return uniqueAttributes;
+      },
+      attributesCombinations() {
+        const attributes = Object.values(this.product.attribute_values).filter(
+          (values) => values.length > 0
+        );
+
+        // all possible combinations into this format
+        /**
+         * [
+         *    { id: random, items: [{ id: 1, value: 'red' }, { id: 2, value: 'small' } ],
+         * ]
+         *
+         *
+        */
+        const mix = attributes.reduce((acc, curr) => {
+          return acc.flatMap(a => curr.map(b => [...a, b]));
+        }, [[]]);
+
+        return mix.length > 0 && mix[0].length > 0
+          ? mix.map(combination => ({
+              id: Math.random().toString(36).substr(2, 9),
+              items: combination
+          }))
+          : [];
+      },
+			isVarietiesEmpty() {
+				return Object.keys(this.product.variety_values).length === 0;
+			},
+    }
+  }).mount("#app");
+</script>
 
 @endsection
+
+@section('styles')
+
+<link rel="stylesheet" href="{{ asset('assets/vue/multiselect/vue-multiselect.min.css') }}"/>
+<link rel="stylesheet" href="{{ asset('assets/vue/multiselect/custom-styles.css') }}"/>
+
+<style>
+
+	label {
+		font-size: 12px;
+	}
+
+	input {
+		font-size: 12px !important;
+	}
+
+	#published-at-input-group {  
+    transition: opacity 0.5s ease, max-height 0.5s ease;  
+    overflow: hidden;   
+	}  
+
+	.hide-published-at-input {  
+    opacity: 0;  
+    max-height: 0;  
+	}  
+
+	.image-size {  
+		width: 100%;         
+		min-height: 100px;       
+		max-height: 100px;       
+		object-fit: cover;   
+	}  
+
+	.remove-btn {
+		position: absolute;
+		top: 5px;
+		right: 5px;
+		color: red;
+		font-size: 20px;
+		cursor: pointer;
+	}
+
+	.vpd-icon-btn {
+		margin-bottom: 0;
+	}
+
+</style>
+
+@endsection 

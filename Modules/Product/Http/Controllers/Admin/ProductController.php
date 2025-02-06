@@ -23,6 +23,7 @@ use Modules\Specification\Entities\Specification;
 use Modules\Unit\Entities\Unit;
 use Throwable;
 use Modules\Product\Entities\Variety;
+use Modules\SizeChart\Entities\SizeChartType;
 
 class ProductController extends Controller
 {
@@ -268,9 +269,10 @@ class ProductController extends Controller
         $tags = Tag::query()->select('id', 'name')->get();
         $units = Unit::query()->active()->select('id', 'name', 'status')->get();
         $specifications = Specification::active()->where('public', 1)->with('values')->latest('order')->get();
-        // $sizeChartTypes = SizeChartType::query()->latest()->get();
-        $productsStatuses = Product::getAvailableStatuses();
-
+        $sizeChartTypes = SizeChartType::query()->select(['id', 'name'])->with('values:id,name,type_id')->latest()->get();
+        $productsStatuses = Product::getAvailableStatusesWithLabel();
+        $discountTypes = Product::getAvailableDiscountTypesWithLabel();
+        
         return view(
             'product::admin.product.create', 
             compact([
@@ -281,47 +283,11 @@ class ProductController extends Controller
                 'units', 
                 'specifications', 
                 'brands', 
-                // 'sizeChartTypes',
-                'productsStatuses'
+                'sizeChartTypes',
+                'productsStatuses',
+                'discountTypes'
             ]
         ));
-
-        // $categories = Category::query()->where('status', 1)
-        //     ->with('attributes.values', 'brands', 'specifications.values')
-        //     ->with(['children' => function ($query) {
-        //         $query->with('attributes.values', 'brands', 'specifications.values', 'children.attributes.values')->where('status', 1);
-        //     }])
-        //     ->with(['specifications' => function ($query) {
-        //         $query->with('values');
-        //         $query->latest('order');
-        //     }])->parents()->orderBy('priority')
-        //     ->get();
-        // $units = Unit::active()->get(['id', 'name']);
-        // $tags = Tag::get(['id', 'name']);
-        // $colors = Color::all();
-        // $public_specifications = Specification::active()->where('public', 1)->with('values')->latest('order')->get();
-        // $all_attributes = Attribute::with('values')->get();
-        // if (app(CoreSettings::class)->get('size_chart.type')) {
-        //     $size_chart_types = SizeChartType::query()->filters()->latest()->get();
-        // } else {
-        //     $size_chart_types = [];
-        // }
-        // $data = compact(
-        //     'categories',
-        //     'units',
-        //     'tags',
-        //     'colors',
-        //     'public_specifications',
-        //     'all_attributes',
-        //     'size_chart_types'
-        // );
-
-        // $coreSettings = app(CoreSettings::class);
-        // if ($coreSettings->get('product.gift.active')) {
-        //     $data['gifts'] = Gift::all();
-        // }
-
-        // return response()->success('', $data);
     }
 
     public function loadVarieties()

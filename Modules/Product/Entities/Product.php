@@ -829,7 +829,27 @@ class Product extends Model implements HasMedia, Viewable
 
 
 
+    public static function getAvailableStatusesWithLabel()
+    {
+        foreach(self::getAvailableStatuses() as $s) {
+            $statuses[] = [
+                'name' => $s,
+                'label' => config('product.prdocutStatusLabels.' . $s)
+            ];
+        }
+        return $statuses;
+    }
 
+    public static function getAvailableDiscountTypesWithLabel()
+    {
+        foreach(self::getAvailableDiscountTypes() as $d) {
+            $dTypes[] = [
+                'name' => $d,
+                'label' => config('product.productDiscountTypes.' . $d)
+            ];
+        }
+        return $dTypes;
+    }
 
 
 
